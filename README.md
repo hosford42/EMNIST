@@ -1,5 +1,5 @@
 # EMNIST
-Extended MNIST Python Package
+Extended MNIST - Python Package
 
 ## The EMNIST Dataset
 
