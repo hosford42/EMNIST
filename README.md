@@ -15,7 +15,8 @@ the [EMNIST web page](https://www.nist.gov/itl/iad/image-group/emnist-dataset) a
 
 This package is a convenience wrapper around the EMNIST Dataset. The package provides functionality to 
 automatically download and cache the dataset, and to load it as numpy arrays, minimizing the boilerplate 
-necessary to make use of the dataset.
+necessary to make use of the dataset. (NOTE: The author of the Python package is not affiliated in any way 
+with the authors of the dataset and the associated paper.)
 
 # Installation
 
@@ -57,7 +58,6 @@ To load the training samples for the 'digits' subset:
   (240000, 28, 28)
   >>> labels.shape
   (240000,)
-  >>>
 ```
 
 To load the test samples for the 'digits' subset:
@@ -69,7 +69,6 @@ To load the test samples for the 'digits' subset:
   (40000, 28, 28)
   >>> labels.shape
   (40000,)
-  >>>
 ```
 
 Data is extracted directly from the downloaded compressed file to minimize disk usage, and is returned 
