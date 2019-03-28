@@ -31,8 +31,8 @@ installation:
   python -c "import emnist; emnist.ensure_cached_data()"
 
 Alternately, if you have already downloaded the original IDX-formatted dataset from the EMNIST web page,
-copy or move it to `~/.cache/emnist/`, where `~` is your home folder, and rename it to `emnist.zip`. The
-package will use the existing file rather than downloading it again.
+copy or move it to `~/.cache/emnist/`, where `~` is your home folder, and rename it from `gzip.zip` to 
+`emnist.zip`. The package will use the existing file rather than downloading it again.
 
 ## Usage
 
