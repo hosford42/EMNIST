@@ -18,7 +18,7 @@ automatically download and cache the dataset, and to load it as numpy arrays, mi
 necessary to make use of the dataset. (NOTE: The author of the Python package is not affiliated in any way 
 with the authors of the dataset and the associated paper.)
 
-# Installation
+## Installation
 
 To install the EMNIST Python package along with its dependencies, run the following command:
 
