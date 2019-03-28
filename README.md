@@ -39,15 +39,18 @@ Usage of the EMNIST Python package is designed to be very simple.
 
 To get a listing of the available subsets:
 
+```python
   >>> from emnist import list_datasets
   >>> list_datasets()
-  \['balanced', 'byclass', 'bymerge', 'digits', 'letters', 'mnist'\]
-  
+  ['balanced', 'byclass', 'bymerge', 'digits', 'letters', 'mnist']
+```
+
 (See the [EMNIST web page](https://www.nist.gov/itl/iad/image-group/emnist-dataset) for details on each of 
 these subsets.)
 
 To load the training samples for the 'digits' subset:
 
+```python
   >>> from emnist import extract_training_samples
   >>> images, labels = extract_training_samples('digits')
   >>> images.shape
@@ -55,9 +58,11 @@ To load the training samples for the 'digits' subset:
   >>> labels.shape
   (240000,)
   >>>
+```
 
 To load the test samples for the 'digits' subset:
 
+```python
   >>> from emnist import extract_test_samples
   >>> images, labels = extract_test_samples('digits')
   >>> images.shape
@@ -65,6 +70,7 @@ To load the test samples for the 'digits' subset:
   >>> labels.shape
   (40000,)
   >>>
+```
 
 Data is extracted directly from the downloaded compressed file to minimize disk usage, and is returned 
 as standard numpy arrays.
