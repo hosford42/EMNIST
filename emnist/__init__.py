@@ -5,11 +5,8 @@ This package is a convenience wrapper around the EMNIST data set. Documentation 
 downloadable files, can be found [here](https://www.nist.gov/itl/iad/image-group/emnist-dataset).
 """
 
-# TODO: Automatically downloading emnist data from various sources, including the original location, one or more git
-#       repositories, and/or free file hosting services.
-
-
 import gzip
+import html
 import logging
 import os
 import re
@@ -17,16 +14,24 @@ import zipfile
 
 import numpy
 import requests
+import tqdm
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-SOURCE_URL = 'http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/gzip.zip'
+# These are ordered from most preferred to least preferred. The file is hosted on google drive to be polite to the
+# authors and reduce impact to the original download server.
+SOURCE_URLS = [
+    'https://drive.google.com/uc?id=1R0blrtCsGEVLjVL3eijHMxrwahRUDK26',
+    'http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/gzip.zip'
+]
+
 CACHE_FILE_PATH = '~/.cache/emnist/emnist.zip'
 PARTIAL_EXT = '_partial'
 ZIP_PATH_TEMPLATE = 'gzip/emnist-{dataset}-{usage}-{matrix}-idx{dim}-ubyte.gz'
 DATASET_ZIP_PATH_REGEX = re.compile(r'gzip/emnist-(.*)-test-images-idx3-ubyte\.gz')
+GOOGLE_DRIVE_CONFIRMATION_LINK_REGEX = re.compile(rb'href="(/uc\?export=download.*?confirm=.*?)">Download anyway</a>')
 
 IDX_DATA_TYPE_CODES = {
     0x08: numpy.ubyte,
@@ -38,7 +43,7 @@ IDX_DATA_TYPE_CODES = {
 }
 
 
-def download_file(url, save_path):
+def download_file(url, save_path, session=None):
     """Download a file from the requested URL to the indicated local save path. Download is done similarly to Chrome's,
     keeping the actual data in a separate file with 'partial' appended to the end of the name until the download
     completes, to ensure that an incomplete or interrupted download can always be detected."""
@@ -48,10 +53,16 @@ def download_file(url, save_path):
     temp_path = save_path + PARTIAL_EXT
     try:
         with open(save_path, 'wb'), open(temp_path, 'wb') as temp_file:
-            with requests.get(url, stream=True) as response:
+            with (session or requests).get(url, stream=True) as response:
                 response.raise_for_status()
-                for chunk in response.iter_content(chunk_size=8192):
-                    temp_file.write(chunk)
+                total_size = int(response.headers.get('content-length', 0))
+                chunk_size = 8192
+                total_chunks = total_size // chunk_size + bool(total_size % chunk_size)
+                with tqdm.tqdm(total=total_chunks, unit='B', unit_scale=True, unit_divisor=1024,
+                               desc="Downloading %s" % os.path.basename(save_path)) as progress:
+                    for chunk in response.iter_content(chunk_size=chunk_size):
+                        temp_file.write(chunk)
+                        progress.update(chunk_size)
     except Exception:
         try:
             if os.path.isfile(temp_path):
@@ -65,6 +76,25 @@ def download_file(url, save_path):
     os.remove(save_path)
     os.rename(temp_path, save_path)
     LOGGER.info("Successfully downloaded %s to %s.", url, save_path)
+
+
+def download_large_google_drive_file(url, save_path):
+    """Google Drive has to make things complicated. There appears to be no way to circumvent their warning that the
+    file is too large to be virus-scanned, hence this otherwise unnecessary complexity. A different choice of file
+    hosting is advisable in the future."""
+    session = requests.session()
+    with session.get(url) as response:
+        response.raise_for_status()
+        content = response.content
+
+    match = re.search(GOOGLE_DRIVE_CONFIRMATION_LINK_REGEX, content)
+    if not match:
+        raise RuntimeError("Google appears to have changed their large file download process unexpectedly. "
+                           "Please download the file manually from %s and save it to ~/.cache/emnist/emnist.zip "
+                           "as a manual work-around." % url)
+
+    confirmed_link = url.split("/uc?")[0] + html.unescape(match.group(1).decode())
+    download_file(confirmed_link, save_path, session)
 
 
 def get_cached_data_path():
@@ -97,7 +127,20 @@ def ensure_cached_data():
         else:
             LOGGER.info("Cached file %s is zero bytes and cannot be used.", cache_path)
             os.remove(cache_path)
-    download_file(SOURCE_URL, cache_path)
+    first_error = None
+    for source_url in SOURCE_URLS:
+        try:
+            if 'drive.google.com' in source_url:
+                download_large_google_drive_file(source_url, cache_path)
+            else:
+                download_file(source_url, cache_path)
+            break
+        except Exception as e:
+            if first_error is None:
+                first_error = e
+    else:
+        assert first_error, "No source URLs listed in SOURCE_URLS!"
+        raise first_error
     return cache_path
 
 
@@ -216,4 +259,7 @@ def inspect(dataset='digits', usage='test'):
 
 
 if __name__ == '__main__':
+    import sys
+    logging.basicConfig(stream=sys.stdout)
+    logging.getLogger().setLevel(0)
     inspect()

@@ -32,7 +32,7 @@ setup(
              'machine learning',
     packages=['emnist'],
     python_requires='>=3.0',  # TODO: Evaluate for use with Python 2
-    install_requires=['numpy', 'requests'],
+    install_requires=['numpy', 'requests', 'tqdm'],
     extras_require={
         'inspect': ['matplotlib']
     },
