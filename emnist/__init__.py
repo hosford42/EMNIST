@@ -23,8 +23,9 @@ LOGGER = logging.getLogger(__name__)
 # These are ordered from most preferred to least preferred. The file is hosted on google drive to be polite to the
 # authors and reduce impact to the original download server.
 SOURCE_URLS = [
-    'https://drive.google.com/uc?id=1R0blrtCsGEVLjVL3eijHMxrwahRUDK26',
-    'http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/gzip.zip'
+    'https://biometrics.nist.gov/cs_links/EMNIST/gzip.zip'
+    # 'http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/gzip.zip'
+    # 'https://drive.google.com/uc?id=1R0blrtCsGEVLjVL3eijHMxrwahRUDK26',
 ]
 
 CACHE_FILE_PATH = '~/.cache/emnist/emnist.zip'
