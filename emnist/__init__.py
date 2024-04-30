@@ -20,12 +20,12 @@ import tqdm
 LOGGER = logging.getLogger(__name__)
 
 
-# These are ordered from most preferred to least preferred. The file is hosted on google drive to be polite to the
+# These are ordered from most preferred to least preferred. The file is hosted on Google Drive to be polite to the
 # authors and reduce impact to the original download server.
 SOURCE_URLS = [
-    'https://biometrics.nist.gov/cs_links/EMNIST/gzip.zip'
-    # 'http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/gzip.zip'
-    # 'https://drive.google.com/uc?id=1R0blrtCsGEVLjVL3eijHMxrwahRUDK26',
+    'https://biometrics.nist.gov/cs_links/EMNIST/gzip.zip',
+    'http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/gzip.zip',
+    'https://drive.google.com/uc?id=1R0blrtCsGEVLjVL3eijHMxrwahRUDK26',
 ]
 
 CACHE_FILE_PATH = '~/.cache/emnist/emnist.zip'
@@ -33,6 +33,11 @@ PARTIAL_EXT = '_partial'
 ZIP_PATH_TEMPLATE = 'gzip/emnist-{dataset}-{usage}-{matrix}-idx{dim}-ubyte.gz'
 DATASET_ZIP_PATH_REGEX = re.compile(r'gzip/emnist-(.*)-test-images-idx3-ubyte\.gz')
 GOOGLE_DRIVE_CONFIRMATION_LINK_REGEX = re.compile(rb'href="(/uc\?export=download.*?confirm=.*?)">Download anyway</a>')
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 '
+                  'Safari/537.36 Edg/115.0.1901.203'
+}
 
 IDX_DATA_TYPE_CODES = {
     0x08: numpy.ubyte,
@@ -42,6 +47,10 @@ IDX_DATA_TYPE_CODES = {
     0x0D: numpy.float32,
     0x0E: numpy.float64,
 }
+
+
+class DataFileValidationError(Exception):
+    """Raised if the cached data file fails validation."""
 
 
 def download_file(url, save_path, session=None):
@@ -54,7 +63,7 @@ def download_file(url, save_path, session=None):
     temp_path = save_path + PARTIAL_EXT
     try:
         with open(save_path, 'wb'), open(temp_path, 'wb') as temp_file:
-            with (session or requests).get(url, stream=True) as response:
+            with (session or requests).get(url, stream=True, headers=HEADERS) as response:
                 response.raise_for_status()
                 total_size = int(response.headers.get('content-length', 0))
                 chunk_size = 8192
@@ -114,6 +123,31 @@ def clear_cached_data():
     LOGGER.info("Cache is clear.")
 
 
+def validate_cached_data(clear_on_failure: bool = True):
+    """Validate the cached EMNIST data. If the downloaded data is corrupted, raise an exception. If the
+    clear_on_failure flag is set, also clear the cached data on error, to enable a fresh download."""
+    cache_path = get_cached_data_path()
+    save_folder = os.path.dirname(cache_path)
+    if not os.path.isdir(save_folder):
+        LOGGER.info("Creating folder %s", save_folder)
+        os.makedirs(save_folder)
+    try:
+        if not os.path.isfile(cache_path):
+            raise DataFileValidationError("Cached file not found at %s." % cache_path)
+        if not os.path.getsize(cache_path):
+            raise DataFileValidationError("Cached file %s is zero bytes and cannot be used." % cache_path)
+        if not list_datasets():
+            raise DataFileValidationError("No data sets found in cached file %s." % cache_path)
+    except DataFileValidationError:
+        if clear_on_failure:
+            clear_cached_data()
+        raise
+    except zipfile.BadZipfile as exc:
+        if clear_on_failure:
+            clear_cached_data()
+        raise DataFileValidationError("Zip file %s is corrupted." % cache_path) from exc
+
+
 def ensure_cached_data():
     """Check that the EMNIST data is available in the local cache, and download it if not."""
     cache_path = get_cached_data_path()
@@ -135,8 +169,10 @@ def ensure_cached_data():
                 download_large_google_drive_file(source_url, cache_path)
             else:
                 download_file(source_url, cache_path)
+            validate_cached_data()
             break
         except Exception as e:
+            LOGGER.error("Error downloading file from %s:", source_url)
             if first_error is None:
                 first_error = e
     else:

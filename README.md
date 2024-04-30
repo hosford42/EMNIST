@@ -22,13 +22,17 @@ with the authors of the dataset and the associated paper.)
 
 To install the EMNIST Python package along with its dependencies, run the following command:
 
-  pip install emnist
+    pip install emnist
+
+For optional support for visual inspection of the data via `emnist.inspect()`, run:
+
+    pip install emnist[inspect]
 
 The dataset itself is automatically downloaded and cached when needed. To preemptively download the data
 and avoid a delay later during the execution of your program, execute the following command after
 installation:
 
-  python -c "import emnist; emnist.ensure_cached_data()"
+    python -c "import emnist; emnist.ensure_cached_data()"
 
 Alternately, if you have already downloaded the original IDX-formatted dataset from the EMNIST web page,
 copy or move it to `~/.cache/emnist/`, where `~` is your home folder, and rename it from `gzip.zip` to 
@@ -41,9 +45,9 @@ Usage of the EMNIST Python package is designed to be very simple.
 To get a listing of the available subsets:
 
 ```python
-  >>> from emnist import list_datasets
-  >>> list_datasets()
-  ['balanced', 'byclass', 'bymerge', 'digits', 'letters', 'mnist']
+>>> from emnist import list_datasets
+>>> list_datasets()
+['balanced', 'byclass', 'bymerge', 'digits', 'letters', 'mnist']
 ```
 
 (See the [EMNIST web page](https://www.nist.gov/itl/iad/image-group/emnist-dataset) for details on each of 
@@ -52,24 +56,32 @@ these subsets.)
 To load the training samples for the 'digits' subset:
 
 ```python
-  >>> from emnist import extract_training_samples
-  >>> images, labels = extract_training_samples('digits')
-  >>> images.shape
-  (240000, 28, 28)
-  >>> labels.shape
-  (240000,)
+>>> from emnist import extract_training_samples
+>>> images, labels = extract_training_samples('digits')
+>>> images.shape
+(240000, 28, 28)
+>>> labels.shape
+(240000,)
 ```
 
 To load the test samples for the 'digits' subset:
 
 ```python
-  >>> from emnist import extract_test_samples
-  >>> images, labels = extract_test_samples('digits')
-  >>> images.shape
-  (40000, 28, 28)
-  >>> labels.shape
-  (40000,)
+>>> from emnist import extract_test_samples
+>>> images, labels = extract_test_samples('digits')
+>>> images.shape
+(40000, 28, 28)
+>>> labels.shape
+(40000,)
 ```
 
 Data is extracted directly from the downloaded compressed file to minimize disk usage, and is returned 
 as standard numpy arrays.
+
+To visually inspect samples from the data set, you will need to ensure you have additional requirements 
+installed via `pip install emnist[inspect]`.
+
+```python
+>>> from emnist import inspect
+>>> inspect('digits')
+``` 

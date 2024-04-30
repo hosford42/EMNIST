@@ -11,7 +11,7 @@ with open(os.path.join(path, 'README.md')) as file:
 
 setup(
     name='emnist',
-    version='0.0',
+    version='0.0.1',
     description='Extended MNIST - Python Package',
     long_description=long_description,
     long_description_content_type='text/markdown',
