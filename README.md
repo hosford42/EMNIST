@@ -22,17 +22,23 @@ with the authors of the dataset and the associated paper.)
 
 To install the EMNIST Python package along with its dependencies, run the following command:
 
-    pip install emnist
+```commandline
+pip install emnist
+```
 
 For optional support for visual inspection of the data via `emnist.inspect()`, run:
 
-    pip install emnist[inspect]
+```commandline
+pip install emnist[inspect]
+```
 
 The dataset itself is automatically downloaded and cached when needed. To preemptively download the data
 and avoid a delay later during the execution of your program, execute the following command after
 installation:
 
-    python -c "import emnist; emnist.ensure_cached_data()"
+```commandline
+python -c "import emnist; emnist.ensure_cached_data()"
+```
 
 Alternately, if you have already downloaded the original IDX-formatted dataset from the EMNIST web page,
 copy or move it to `~/.cache/emnist/`, where `~` is your home folder, and rename it from `gzip.zip` to 
